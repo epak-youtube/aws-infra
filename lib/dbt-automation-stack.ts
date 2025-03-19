@@ -21,7 +21,7 @@ export class DbtStack extends cdk.Stack {
         const dbtProjectRepo = ecr.Repository.fromRepositoryName(this, 'DbtProjectRepo', 'dbt-project');
 
         // Import dbt credentials from AWS Secrets Manager
-        const dbtCredentials = secretsmanager.Secret.fromSecretNameV2(this, 'DbtCredentials', 'dbt-credentials');
+        const dbtCredentials = secretsmanager.Secret.fromSecretCompleteArn(this, 'DbtCredentials', 'arn:aws:secretsmanager:us-east-2:891612547191:secret:dbt-credentials-1kWEiV');
 
         // Create a role for Lambda with necessary permissions
         const lambdaRole = new iam.Role(this, 'DbtLambdaExecRole', {
@@ -39,13 +39,12 @@ export class DbtStack extends cdk.Stack {
         const dbtLambda = new lambda.DockerImageFunction(this, 'DbtLambdaFunction', {
             functionName: 'execute-dbt-project',
             code: lambda.DockerImageCode.fromEcr(dbtProjectRepo, {
-                tagOrDigest: 'latest'
+                tagOrDigest: 'sha256:148f455b25f8ee40e522caaae67c1d7913062d7aee4156752292e1b13a748c9b',
             }),
             timeout: cdk.Duration.minutes(15),
             memorySize: 1024,
             role: lambdaRole,
             environment: {
-                DBT_PROFILES_DIR: '/var/task/dbt_project',
                 DBT_CREDENTIALS_SECRET_ARN: dbtCredentials.secretArn,
             },
         });
